@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { motion } from "framer-motion"; // ✅ Import Framer Motion
 import {
   Container,
   Typography,
@@ -13,12 +14,15 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import emailjs from "@emailjs/browser"; // Email Sending
-import jsPDF from "jspdf"; // PDF Download
+import emailjs from "@emailjs/browser";
+import jsPDF from "jspdf";
 
-const SERVICE_ID = "your_service_id"; // Replace with EmailJS Service ID
-const TEMPLATE_ID = "your_template_id"; // Replace with EmailJS Template ID
-const USER_ID = "your_user_id"; // Replace with EmailJS User ID
+// ✅ Use motion(Button) to animate MUI Buttons
+const MotionButton = motion(Button);
+
+const SERVICE_ID = "service_ydm9hpu"; // Replace with EmailJS Service ID
+const TEMPLATE_ID = "template_lia5m1p"; // Replace with EmailJS Template ID
+const USER_ID = "G7mHMxhxoIfUEQJrA"; // Replace with EmailJS User ID
 
 const SavedQuestions = () => {
   const [questions, setQuestions] = useState([]);
@@ -29,12 +33,13 @@ const SavedQuestions = () => {
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!auth.currentUser) return;
+      const user = auth.currentUser;
+      if (!user) return;
 
       try {
         const q = query(
           collection(db, "questions"),
-          where("userId", "==", auth.currentUser.uid),
+          where("userId", "==", user.uid),
           orderBy("createdAt", "desc")
         );
 
@@ -53,7 +58,15 @@ const SavedQuestions = () => {
       }
     };
 
-    fetchQuestions();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchQuestions(user);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -68,10 +81,10 @@ const SavedQuestions = () => {
     }
   }, [search, questions]);
 
-  // Function to Send Email
+  // ✅ Function to Send Email
   const sendEmail = async () => {
     if (!auth.currentUser) return;
-    
+
     setEmailSending(true);
 
     const questionsList = filteredQuestions
@@ -95,7 +108,7 @@ const SavedQuestions = () => {
     setEmailSending(false);
   };
 
-  // Function to Download as PDF
+  // ✅ Function to Download as PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("Saved Interview Questions", 10, 10);
@@ -108,61 +121,75 @@ const SavedQuestions = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Saved Interview Questions
-        </Typography>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            Saved Interview Questions
+          </Typography>
 
-        <TextField
-          label="Search by Job Role"
-          variant="outlined"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+          <TextField
+            label="Search by Job Role"
+            variant="outlined"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        {loading ? (
-          <CircularProgress />
-        ) : filteredQuestions.length > 0 ? (
-          <Paper elevation={2} sx={{ p: 2 }}>
-            <List>
-              {filteredQuestions.map((q) => (
-                <ListItem key={q.id} divider>
-                  <ListItemText
-                    primary={q.question}
-                    secondary={`Role: ${q.jobRole} | Date: ${new Date(q.createdAt?.seconds * 1000).toLocaleString()}`}
-                  />
-                </ListItem>
-              ))}
-            </List>
+          {loading ? (
+            <CircularProgress />
+          ) : filteredQuestions.length > 0 ? (
+            <Paper elevation={2} sx={{ p: 2 }}>
+              <List>
+                {filteredQuestions.map((q) => (
+                  <ListItem key={q.id} divider>
+                    <ListItemText
+                      primary={q.question}
+                      secondary={`Role: ${q.jobRole} | Date: ${new Date(
+                        q.createdAt?.seconds * 1000
+                      ).toLocaleString()}`}
+                    />
+                  </ListItem>
+                ))}
+              </List>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={sendEmail}
-                disabled={emailSending}
-              >
-                {emailSending ? "Sending..." : "Send to Email"}
-              </Button>
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                {/* ✅ Fixed: Use motion(Button) instead of <motion.button> */}
+                <MotionButton
+                  variant="contained"
+                  color="primary"
+                  onClick={sendEmail}
+                  disabled={emailSending}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {emailSending ? "Sending..." : "Send to Email"}
+                </MotionButton>
 
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={downloadPDF}
-              >
-                Download as PDF
-              </Button>
-            </Stack>
-          </Paper>
-        ) : (
-          <Typography variant="h6">No questions found.</Typography>
-        )}
-      </Paper>
-    </Container>
+                <MotionButton
+                  variant="contained"
+                  color="secondary"
+                  onClick={downloadPDF}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  Download as PDF
+                </MotionButton>
+              </Stack>
+            </Paper>
+          ) : (
+            <Typography variant="h6">No questions found.</Typography>
+          )}
+        </Paper>
+      </Container>
+    </motion.div>
   );
 };
 
 export default SavedQuestions;
+

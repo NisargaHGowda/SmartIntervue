@@ -19,6 +19,7 @@
     "eslint": "^9.20.0",
     "eslint-webpack-plugin": "^4.2.0",
     "firebase": "^11.3.0",
+    "framer-motion": "^12.4.1",
     "jspdf": "^2.5.2",
     "lodash": "^4.17.21",
     "lodash.template": "^4.5.0",
