@@ -13,7 +13,7 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import emailjs from "emailjs-com"; // Email Sending
+import emailjs from "@emailjs/browser"; // Email Sending
 import jsPDF from "jspdf"; // PDF Download
 
 const SERVICE_ID = "your_service_id"; // Replace with EmailJS Service ID
